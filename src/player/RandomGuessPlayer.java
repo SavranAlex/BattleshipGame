@@ -1,5 +1,8 @@
 package player;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Random;
 import java.util.Scanner;
 import world.World;
 
@@ -11,9 +14,29 @@ import world.World;
  */
 public class RandomGuessPlayer implements Player{
 
+    private int col;
+    private int raw;
+    private ArrayList<World.ShipLocation> ships;
+    //private ArrayList<World.Coordinate> shots;
+    private HashMap<Integer, Pair> shots;
+    int k;
+
+
     @Override
     public void initialisePlayer(World world) {
-        // To be implemented.
+        k = 0;
+        this.ships = world.shipLocations;
+        this.col = world.numColumn;
+        this.raw = world.numRow;
+        this.shots = new HashMap<>();
+        for (int i = 0; i < col; i++) {
+            for (int j = 0; j < raw; j++) {
+                Pair pair = new Pair(i,j);
+                shots.put(k, pair);
+                k++;
+            }
+        }
+
     } // end of initialisePlayer()
 
     @Override
@@ -27,10 +50,15 @@ public class RandomGuessPlayer implements Player{
 
     @Override
     public Guess makeGuess() {
-        // To be implemented.
-
-        // dummy return
-        return null;
+        Random rnd = new Random();
+        Guess guess = new Guess();
+        int key = rnd.nextInt(k);
+        Pair shot = shots.get(key);
+        guess.column = shot.col;
+        guess.row = shot.raw;
+        shots.remove(key);
+        k--;
+        return guess;
     } // end of makeGuess()
 
 
