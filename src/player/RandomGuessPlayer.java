@@ -19,16 +19,20 @@ public class RandomGuessPlayer implements Player{
     private ArrayList<World.ShipLocation> ships;
     //private ArrayList<World.Coordinate> shots;
     private HashMap<Integer, Pair> shots;
-    int k;
+    private int k;
 
+
+//    public int pickShotCell() {
+//
+//    }
 
     @Override
     public void initialisePlayer(World world) {
-        k = 0;
         this.ships = world.shipLocations;
         this.col = world.numColumn;
         this.raw = world.numRow;
         this.shots = new HashMap<>();
+        k = 0;
         for (int i = 0; i < col; i++) {
             for (int j = 0; j < raw; j++) {
                 Pair pair = new Pair(i,j);
