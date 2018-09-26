@@ -4,7 +4,7 @@ public class Pair {
     int col;
     int raw;
 
-    Pair(int col, int raw) {
+    Pair (int col, int raw) {
         this.col = col;
         this.raw = raw;
     }
