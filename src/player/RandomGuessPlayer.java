@@ -4,7 +4,12 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Random;
 import java.util.Scanner;
+
+import ship.Ship;
 import world.World;
+import world.World.Coordinate;
+import world.World.ShipLocation;
+
 
 /**
  * Random guess player (task A).
@@ -16,11 +21,16 @@ public class RandomGuessPlayer implements Player{
 
     private int col;
     private int raw;
-    private ArrayList<World.ShipLocation> ships;
+    private ArrayList<World.ShipLocation> shipsLocations;
+    private ArrayList<ShipLocation> remainingShips;
     //private ArrayList<World.Coordinate> shots;
     private HashMap<Integer, Pair> shots;
     private int k;
-
+    private Coordinate coor;
+    private ShipLocation targetedShipLocation;
+    private Answer answer;
+    private Guess guess;
+    private  ArrayList<Coordinate> hittedCoors;
 
 //    public int pickShotCell() {
 //
@@ -28,7 +38,9 @@ public class RandomGuessPlayer implements Player{
 
     @Override
     public void initialisePlayer(World world) {
-        this.ships = world.shipLocations;
+        this.shipsLocations = world.shipLocations;
+        this.remainingShips = world.shipLocations;
+        hittedCoors = new ArrayList<>();
         this.col = world.numColumn;
         this.raw = world.numRow;
         this.shots = new HashMap<>();
@@ -45,17 +57,28 @@ public class RandomGuessPlayer implements Player{
 
     @Override
     public Answer getAnswer(Guess guess) {
-        // To be implemented.
-
-        // dummy return
-        return null;
+        //Answer answer = new Answer();
+        coor.column = guess.column;
+        coor.row = guess.row;
+        answer.isHit = false;
+        //targetedShipLocation.coordinates.add(coor);
+      for (ShipLocation possibleShip : shipsLocations) {
+          if (possibleShip.coordinates.contains(coor)) {
+              answer.isHit = true;
+              hittedCoors.add(coor);
+          }
+          if (possibleShip.coordinates.containsAll(hittedCoors)) {
+              answer.shipSunk = possibleShip.ship;
+          }
+      }
+        return answer;
     } // end of getAnswer()
 
 
     @Override
     public Guess makeGuess() {
-        Random rnd = new Random();
         Guess guess = new Guess();
+        Random rnd = new Random();
         int key = rnd.nextInt(k);
         Pair shot = shots.get(key);
         guess.column = shot.col;
@@ -68,16 +91,20 @@ public class RandomGuessPlayer implements Player{
 
     @Override
     public void update(Guess guess, Answer answer) {
-        // To be implemented.
+//        guess = makeGuess();
+//        answer = getAnswer(new Guess());
     } // end of update()
 
 
     @Override
     public boolean noRemainingShips() {
-        // To be implemented.
-
-        // dummy return
-        return true;
+        if (remainingShips.contains(answer.shipSunk)) {
+            remainingShips.remove(answer.shipSunk);
+        }
+        if (remainingShips.isEmpty()) {
+            return true;
+        }
+        return false;
     } // end of noRemainingShips()
 
 } // end of class RandomGuessPlayer
