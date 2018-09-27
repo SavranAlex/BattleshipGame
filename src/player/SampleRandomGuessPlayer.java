@@ -33,15 +33,14 @@ public class SampleRandomGuessPlayer implements Player
   public void initialisePlayer(World paramWorld) {
     rowSize = numRow;
     clnSize = numColumn;
-    isHex = isHex;
     isguessed = new boolean[rowSize][clnSize + (rowSize + 1) / 2];
     int i = 0;
     for (World.ShipLocation localShipLocation : shipLocations) {
       ownShips[i] = new OwnShip(null);
       ownShips[i].ship = ship;
       for (int j = 0; j < ownShips[i].ship.len(); j++) {
-        ownShips[i].rowCdns[j] = coordinates.get(j)).row;
-        ownShips[i].clnCdns[j] = coordinates.get(j)).column;
+        ownShips[i].rowCdns[j] = coordinates.get(j).row;
+        ownShips[i].clnCdns[j] = coordinates.get(j).column;
         ownShips[i].isdown[j] = false;
       }
       i++;
@@ -59,7 +58,7 @@ public class SampleRandomGuessPlayer implements Player
           ownShips[i].isdown[j] = true;
           int k = 1;
           for (int m = 0; m < ownShips[i].ship.len(); m++) {
-            if (ownShips[i].isdown[m] == 0) k = 0;
+            if (ownShips[i].isdown[m] == false) k = 0;
           }
           if (k != 0) {
             shipSunk = ownShips[i].ship;
@@ -78,12 +77,14 @@ public class SampleRandomGuessPlayer implements Player
   {
     Random localRandom = new Random();
     int i;
-    int j; do { i = localRandom.nextInt(rowSize);
-      j = localRandom.nextInt(clnSize);
-      if (isHex) {
-        j += (i + 1) / 2;
-      }
-    } while (isguessed[i][j] != 0);
+    int j; 
+    do { 
+        i = localRandom.nextInt(rowSize);
+        j = localRandom.nextInt(clnSize);
+        if (isHex) {
+          j += (i + 1) / 2;
+        }
+    } while (isguessed[i][j] != false);
     Guess localGuess = new Guess();
     row = i;
     column = j;
@@ -99,7 +100,7 @@ public class SampleRandomGuessPlayer implements Player
   {
     for (int i = 0; i < 5; i++) {
       for (int j = 0; j < ownShips[i].ship.len(); j++) {
-        if (ownShips[i].isdown[j] == 0)
+        if (ownShips[i].isdown[j] == false)
           return false;
       }
     }
