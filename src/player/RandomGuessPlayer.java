@@ -21,17 +21,27 @@ public class RandomGuessPlayer implements Player{
     private ArrayList<World.ShipLocation> shipsLocations;
     private ArrayList<ShipLocation> remainingShips;
     //private ArrayList<World.Coordinate> shots;
-    //private HashMap<Integer, Pair> shots;
-    private TreeMap<Integer, Pair> shots;
+    //private HashMap<Integer, TargetedCell> shots;
+    private TreeMap<Integer, TargetedCell> shots;
     private int k;
     private Coordinate coor;
     private ShipLocation targetedShipLocation;
     //private Answer answer;
     //private Guess guess;
     private  ArrayList<Coordinate> hittedCoors;
+    private boolean shootStatus;
+    //private int count;
+    private ShipLocation removingShip;
+    private boolean end;
 
-//    public int pickShotCell() {
-//
+
+//    public TargetedCell pickShotCell() {
+//        Random rnd = new Random();
+//        TargetedCell shootCell = shots.get(rnd.nextInt(k));
+//        if (shootCell.shootStatus) {
+//            return pickShotCell();
+//        }
+//        return shootCell;
 //    }
 
 
@@ -40,6 +50,7 @@ public class RandomGuessPlayer implements Player{
 
     @Override
     public void initialisePlayer(World world) {
+        System.out.println("initialize mehtod");
         this.shipsLocations = world.shipLocations;
         this.remainingShips = world.shipLocations;
         hittedCoors = new ArrayList<>();
@@ -50,12 +61,14 @@ public class RandomGuessPlayer implements Player{
         k = 0;
         for (int i = 0; i < col; i++) {
             for (int j = 0; j < raw; j++) {
-                Pair pair = new Pair(i,j);
-                shots.put(k, pair);
+                shootStatus = false;
+                TargetedCell cell = new TargetedCell(i,j, shootStatus);
+                shots.put(k, cell);
                 k++;
             }
         }
-        System.out.println("map size: " + shots.size() + "ks" + k);
+        //count = k;
+        //System.out.println("map size: " + shots.size() + " ks " + k + " count " + count);
 
     } // end of initialisePlayer()
 
@@ -68,16 +81,23 @@ public class RandomGuessPlayer implements Player{
         coor.row = guess.row;
         answer.isHit = false;
         //targetedShipLocation.coordinates.add(coor);
-      for (ShipLocation possibleShip : shipsLocations) {
+      for (ShipLocation possibleShip : remainingShips) {
           if (possibleShip.coordinates.contains(coor)) {
               answer.isHit = true;
-              hittedCoors.add(coor);
+              //hittedCoors.add(coor);
+              possibleShip.coordinates.remove(coor);
           }
-          if (possibleShip.coordinates.containsAll(hittedCoors)) {
+          if (possibleShip.coordinates.isEmpty()) {
+          //if (hittedCoors.containsAll(possibleShip.coordinates)) {
               answer.shipSunk = possibleShip.ship;
-              remainingShips.remove(possibleShip.ship);
+              //remainingShips.remove(possibleShip);
+              removingShip = possibleShip;
+              //System.out.println("shots size " + shots.size() + " ship name: " + possibleShip.ship.name() + " removed? " + remainingShips.remove(possibleShip));
+              System.out.println("ship destroyed" + removingShip.ship.name());
+              System.out.println("counts: " + k + " ships remained: " + remainingShips.size());
           }
       }
+        remainingShips.remove(removingShip);
         return answer;
     } // end of getAnswer()
 
@@ -86,14 +106,21 @@ public class RandomGuessPlayer implements Player{
     public Guess makeGuess() {
         Guess guess = new Guess();
         Random rnd = new Random();
-        int key = rnd.nextInt(k);
-        Pair shot = shots.get(key);
-        guess.column =
-                shot.col;
-        guess.row =
-                shot.raw;
-        shots.remove(key);
-        k--;
+        int key = rnd.nextInt(100);
+        System.out.println(key + " random key");
+        TargetedCell shot = shots.get(key);
+        while (shot.shootStatus) {
+            shot = shots.get(rnd.nextInt(100));
+            System.out.println(shot.shootStatus + " - shoot status " + key + " - key");
+        }
+        guess.column = shot.col;
+        guess.row = shot.raw;
+        shot.shootStatus = true;
+
+        System.out.println("shot cell: " + shot.col + " " + shot.raw);
+
+        //shots.remove(key);
+        //k--;
         System.out.println(guess.toString());
         return guess;
     } // end of makeGuess()
@@ -103,6 +130,7 @@ public class RandomGuessPlayer implements Player{
     public void update(Guess guess, Answer answer) {
 //        guess = this.makeGuess();
 //        answer = this.getAnswer();
+        System.out.println("update method " + remainingShips.size());
     } // end of update()
 
 
