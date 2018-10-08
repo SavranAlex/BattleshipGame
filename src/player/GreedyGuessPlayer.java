@@ -2,6 +2,7 @@ package player;
 
 import java.util.Scanner;
 import world.World;
+import world.World.ShipLocation;
 
 /**
  * Greedy guess player (task B).
@@ -11,9 +12,20 @@ import world.World;
  */
 public class GreedyGuessPlayer  implements Player{
 
+    int rowSize = 0;
+    int colSize = 0;
+    boolean[][] guessed;
+
     @Override
     public void initialisePlayer(World world) {
-        // To be implemented.
+        rowSize = world.numRow;
+        colSize = world.numColumn;
+        guessed = new boolean[rowSize][colSize];
+        int i = 0;
+        for(World.ShipLocation localShipLocation : shipLocations)
+        {
+            
+        }
     } // end of initialisePlayer()
 
     @Override
