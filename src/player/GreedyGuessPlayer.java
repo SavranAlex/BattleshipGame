@@ -2,9 +2,12 @@ package player;
 
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Random;
 import java.util.Scanner;
 import world.World;
 import world.World.ShipLocation;
+import ship.*;
 
 /**
  * Greedy guess player (task B).
@@ -16,8 +19,11 @@ public class GreedyGuessPlayer  implements Player{
 
     World world;
     ArrayList<World.ShipLocation> remainingShips = new ArrayList<>();
-    HashSet<Guess> guesses = new HashSet<>();
+    ArrayList<Guess> parityGuesses = new ArrayList<>();
+    ArrayList<Guess> potentialGuess = new ArrayList<>();
+    ArrayList<Guess> previousGuesses = new ArrayList<>();
     ArrayList<Guess> hits = new ArrayList<>();
+    Guess lastHit = new Guess();
     boolean targetMode = false;
 
 
@@ -31,7 +37,7 @@ public class GreedyGuessPlayer  implements Player{
             remainingShips.add(world.shipLocations.get(i));
         }
 
-        // generate a set of guesses that will rule out a bunch of future gesses
+        // generate a set of parityGuesses that will rule out a bunch of future gesses
         // even rows/columns to rule out
         for (int row = 0; row < world.numRow; row = row + 2)
         {
@@ -41,19 +47,19 @@ public class GreedyGuessPlayer  implements Player{
                 addGuess.row = row;
                 addGuess.column = col;
 
-                guesses.add(addGuess);
+                parityGuesses.add(addGuess);
             }
         }
         // odd rows/columns to rule out
-        for(row = 1; row < world.numRow; row = row + 2)
+        for(int row = 1; row < world.numRow; row = row + 2)
         {
-            for(col = 1; col < world.numColumn; col = col + 2)
+            for(int col = 1; col < world.numColumn; col = col + 2)
             {
                 Guess addGuess = new Guess();
                 addGuess.row = row;
                 addGuess.column = col;
 
-                guesses.add(addGuess);
+                parityGuesses.add(addGuess);
             }
         }
     } // end of initialisePlayer()
@@ -72,7 +78,7 @@ public class GreedyGuessPlayer  implements Player{
             localShipCoords = this.remainingShips.get(i).coordinates;
             ship = this.remainingShips.get(i).ship;
 
-            for(int x = 0; x < coords.size(); x++)
+            for(int x = 0; x < localShipCoords.size(); x++)
             {
                 coords = localShipCoords.get(x);
 
@@ -87,7 +93,6 @@ public class GreedyGuessPlayer  implements Player{
                         this.remainingShips.remove(i); //remove this ship from our list of remaining ships
                         return answer;
                     }
-
                 }
             }
         }
@@ -98,25 +103,81 @@ public class GreedyGuessPlayer  implements Player{
 
     @Override
     public Guess makeGuess() {
-        // To be implemented.
+        
+        Guess newGuess = new Guess();
+        Random random = new Random();
+        int index;
 
-        // dummy return
+        if(targetMode == true)
+        {
+            
+        }
+        else //Random parityGuesses, hunting mode
+        {
+            if(parityGuesses.size() != 0)
+            {
+                index = random.nextInt(parityGuesses.size());
+                newGuess = parityGuesses.get(index);
+                parityGuesses.remove(index);
+                previousGuesses.add(newGuess);
+            }
+            return newGuess;
+        }
         return null;
     } // end of makeGuess()
 
 
     @Override
     public void update(Guess guess, Answer answer) {
-        // To be implemented.
+
+        //If ship is hit but not sunk, enter targetting mode
+        if(answer.isHit == true && answer.shipSunk == null)
+        {
+            targetMode = true;
+            hits.add(guess);
+
+            //Generate the guesses adjacent to the hit
+            Guess north = guess;
+            Guess east = guess;
+            Guess south = guess;
+            Guess west = guess;
+            north.row-=1;
+            east.column+=1;
+            south.row+=1;
+            west.column-=1;
+
+            //If these locations have not previous been guessed, add to potential guess list
+            if(!previousGuesses.contains(north)) 
+                potentialGuess.add(north);
+            if(!previousGuesses.contains(east))
+                potentialGuess.add(east);
+            if(!previousGuesses.contains(south))
+                potentialGuess.add(south);
+            if(!previousGuesses.contains(west))
+                potentialGuess.add(west);
+        }
+        //If ship is hit and ship is sunk AND we have no more potential guesses, enter hunting mode
+        else if (answer.isHit == true && answer.shipSunk != null)
+        {
+            if(potentialGuess.isEmpty())
+            {
+                targetMode = false;
+            };
+        }
+        //Ship is not hit
+        else
+        {
+            if(potentialGuess.contains(guess))
+            {
+                potentialGuess.remove(guess);
+            }
+        }
     } // end of update()
 
 
     @Override
     public boolean noRemainingShips() {
-        // To be implemented.
-
-        // dummy return
-        return true;
+        return remainingShips.isEmpty();
     } // end of noRemainingShips()
 
 } // end of class GreedyGuessPlayer
