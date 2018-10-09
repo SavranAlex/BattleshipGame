@@ -22,9 +22,6 @@ public class RandomGuessPlayer implements Player{
     ArrayList<Guess> randomGuesses = new ArrayList<>();
     ArrayList<Guess> previousGuesses = new ArrayList<>();
 
-    public RandomGuessPlayer() {
-    }
-
     @Override
     public void initialisePlayer(World world) {
         this.world = world;
@@ -74,8 +71,6 @@ public class RandomGuessPlayer implements Player{
                     }
                 }
             }
-
-            
         }
 
         return answer;
@@ -111,7 +106,7 @@ public class RandomGuessPlayer implements Player{
 
     @Override
     public void update(Guess guess, Answer answer) {
-
+        //Not needed for random guessing
     } // end of update()
 
 
