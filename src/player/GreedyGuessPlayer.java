@@ -75,8 +75,6 @@ public class GreedyGuessPlayer  implements Player{
         //for each ship location, check each coordinate the ship contains
         //to see if it matches the guess.
 
-        if(guess == null) return null; //remove in future
-
         for(ShipLocation possibleShip : remainingShips)
         {
             Iterator<Coordinate> iter = possibleShip.coordinates.iterator();
@@ -112,78 +110,13 @@ public class GreedyGuessPlayer  implements Player{
 
         if(targetMode == true)
         {
-            lastHit = hits.pop();
-
-            //if hits has >1 hits
-            if(!hits.isEmpty())
+            if(!potentialGuess.isEmpty())
             {
-                previousHit = hits.peek();
-                hits.push(lastHit);
                 do
                 {
-                    if(lastHit.column > previousHit.column) //Last shot was east
-                    {
-                        newGuess.column = lastHit.column-1;
-                        newGuess.row = lastHit.row;
-                    }
-                    else if(previousHit.column < lastHit.column) //Last shot was east
-                    {
-                        newGuess.column = lastHit.column+1;
-                        newGuess.row = lastHit.row;
-                    }
-                    else if(previousHit.row > lastHit.row) //Last shot was north
-                    {
-                        newGuess.row = lastHit.row -1;
-                        newGuess.column = lastHit.column;
-                    }
-                    else if(previousHit.row < lastHit.row)//Last shot was south
-                    {
-                        newGuess.row = lastHit.row +1;
-                        newGuess.column = lastHit.column;
-                    }
-
+                    index = random.nextInt(potentialGuess.size());
+                    newGuess = potentialGuess.remove(index);
                     if(isValidShot(newGuess))
-                    {
-                        return newGuess;
-                    }
-                } while(validShot == false);
-            }
-            else
-            {
-                hits.push(lastHit);
-                //generate random direction, check for valid shot, shoot
-                do
-                {
-                    int direction = random.nextInt(4);
-                    
-                    switch(direction)
-                    {
-                        case 0: 
-                        {
-                            newGuess.column = lastHit.column + 1;
-                            newGuess.row = lastHit.row;
-                            break;
-                        }
-                        case 1:
-                        {
-                            newGuess.column = lastHit.column - 1;
-                            newGuess.row = lastHit.row;
-                            break;
-                        }
-                        case 2:
-                        {
-                            newGuess.row = lastHit.row + 1;
-                            newGuess.column = lastHit.column;
-                            break;
-                        }
-                        case 3:
-                        {
-                            newGuess.row = lastHit.row - 1;
-                            newGuess.column = lastHit.column;
-                            break;
-                        }
-                    }
-                    if(isValidShot(newGuess)) 
                     {
                         return newGuess;
                     }
@@ -202,7 +135,6 @@ public class GreedyGuessPlayer  implements Player{
                     if(isValidShot(newGuess))
                     {
                         parityGuesses.remove(index);
-                        previousGuesses.push(newGuess);
                         return newGuess;
                     }
                 } while (validShot == false);
@@ -217,32 +149,50 @@ public class GreedyGuessPlayer  implements Player{
 
         previousGuesses.push(guess);
 
+        if(answer.isHit == true)
+        {
+            hits.push(guess);
+            targetMode = true;
+        }
+
         if(targetMode == true)
         {
             if(answer.isHit == true && answer.shipSunk == null) //Ship hit but not sunk
             {
-                hits.push(guess);
+                Guess north = new Guess();
+                north.column = guess.column;
+                north.row = guess.row+1;
+                if(isValidShot(north)) potentialGuess.add(north);
+
+                Guess south = new Guess();
+                south.column = guess.column;
+                south.row = guess.row-1;
+                if(isValidShot(south)) potentialGuess.add(south);
+
+                Guess west = new Guess();
+                west.column = guess.column-1;
+                west.row = guess.row;
+                if(isValidShot(west)) potentialGuess.add(west);
+
+                Guess east = new Guess();
+                east.column = guess.column+1;
+                east.row = guess.row;
+                if(isValidShot(east)) potentialGuess.add(east);
             }
             else if(answer.isHit == true && answer.shipSunk != null) //ship hit and sunk
             {
-                hits.push(guess);
                 targetMode = false;
             }
             else if(answer.isHit == false)
             {
                 hits = reverseStack(hits);
-                swapped = true;
             }
         }
         else
         {
             if(answer.isHit == true)
             {
-                hits.push(guess);
                 targetMode = true;
-                swapped = false;
-
-
             }
         }
     } // end of update()
@@ -269,7 +219,7 @@ public class GreedyGuessPlayer  implements Player{
         Guess test = new Guess();
         Iterator<Guess> iter = previousGuesses.iterator();
 
-        if(guess.column < 0 || guess.column > world.numColumn || guess.row < 0 || guess.row > world.numRow)
+        if(guess.column < 0 || guess.column >= world.numColumn || guess.row < 0 || guess.row >= world.numRow)
         {
             return false;
         }
