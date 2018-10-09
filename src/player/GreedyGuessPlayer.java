@@ -115,9 +115,10 @@ public class GreedyGuessPlayer  implements Player{
                 do
                 {
                     index = random.nextInt(potentialGuess.size());
-                    newGuess = potentialGuess.remove(index);
+                    newGuess = potentialGuess.get(index);
                     if(isValidShot(newGuess))
                     {
+                        potentialGuess.remove(index);
                         return newGuess;
                     }
                 } while(validShot == false);
@@ -140,7 +141,7 @@ public class GreedyGuessPlayer  implements Player{
                 } while (validShot == false);
             }
         }
-        return null;
+        return newGuess;
     } // end of makeGuess()
 
 
@@ -153,46 +154,18 @@ public class GreedyGuessPlayer  implements Player{
         {
             hits.push(guess);
             targetMode = true;
+            addAdjacentGuesses(guess);
         }
 
         if(targetMode == true)
         {
-            if(answer.isHit == true && answer.shipSunk == null) //Ship hit but not sunk
-            {
-                Guess north = new Guess();
-                north.column = guess.column;
-                north.row = guess.row+1;
-                if(isValidShot(north)) potentialGuess.add(north);
-
-                Guess south = new Guess();
-                south.column = guess.column;
-                south.row = guess.row-1;
-                if(isValidShot(south)) potentialGuess.add(south);
-
-                Guess west = new Guess();
-                west.column = guess.column-1;
-                west.row = guess.row;
-                if(isValidShot(west)) potentialGuess.add(west);
-
-                Guess east = new Guess();
-                east.column = guess.column+1;
-                east.row = guess.row;
-                if(isValidShot(east)) potentialGuess.add(east);
-            }
-            else if(answer.isHit == true && answer.shipSunk != null) //ship hit and sunk
+            if(potentialGuess.isEmpty()) //In target mode but have no other potential guesses
             {
                 targetMode = false;
             }
             else if(answer.isHit == false)
             {
                 hits = reverseStack(hits);
-            }
-        }
-        else
-        {
-            if(answer.isHit == true)
-            {
-                targetMode = true;
             }
         }
     } // end of update()
@@ -203,6 +176,31 @@ public class GreedyGuessPlayer  implements Player{
         return remainingShips.isEmpty();
     } // end of noRemainingShips()
 
+    public void addAdjacentGuesses(Guess guess)
+    {
+        Guess north = new Guess();
+        north.column = guess.column;
+        north.row = guess.row+1;
+        
+        Guess south = new Guess();
+        south.column = guess.column;
+        south.row = guess.row-1;
+        
+        Guess west = new Guess();
+        west.column = guess.column-1;
+        west.row = guess.row;
+        
+        Guess east = new Guess();
+        east.column = guess.column+1;
+        east.row = guess.row;
+        
+        
+        if(isValidShot(west) && isValidPotentialGuess(west)) potentialGuess.add(west);
+        if(isValidShot(south) && isValidPotentialGuess(south)) potentialGuess.add(south);
+        if(isValidShot(north) && isValidPotentialGuess(north)) potentialGuess.add(north);
+        if(isValidShot(east) && isValidPotentialGuess(east)) potentialGuess.add(east);
+    }
+
     private Stack<Guess> reverseStack(Stack<Guess> stack)
     {
         Stack<Guess> temp = new Stack<Guess>();
@@ -212,6 +210,22 @@ public class GreedyGuessPlayer  implements Player{
             temp.push(stack.pop());
         }
         return temp;
+    }
+
+    public boolean isValidPotentialGuess(Guess guess)
+    {
+        Guess test = new Guess();
+        Iterator<Guess> iter = potentialGuess.iterator();
+
+        while(iter.hasNext())
+        {
+            test = iter.next();
+            if(test.row == guess.row && test.column == guess.column)
+            {
+                return false;
+            }
+        }
+        return true;
     }
 
     public boolean isValidShot(Guess guess)
