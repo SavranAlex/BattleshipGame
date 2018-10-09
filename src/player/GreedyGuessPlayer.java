@@ -118,9 +118,10 @@ public class GreedyGuessPlayer  implements Player{
             if(!hits.isEmpty())
             {
                 previousHit = hits.peek();
+                hits.push(lastHit);
                 do
                 {
-                    if(previousHit.column > lastHit.column) //Last shot was west
+                    if(lastHit.column > previousHit.column) //Last shot was east
                     {
                         newGuess.column = lastHit.column-1;
                         newGuess.row = lastHit.row;
@@ -149,6 +150,7 @@ public class GreedyGuessPlayer  implements Player{
             }
             else
             {
+                hits.push(lastHit);
                 //generate random direction, check for valid shot, shoot
                 do
                 {
@@ -212,8 +214,6 @@ public class GreedyGuessPlayer  implements Player{
 
     @Override
     public void update(Guess guess, Answer answer) {
-
-        boolean swapped = false;
 
         previousGuesses.push(guess);
 
