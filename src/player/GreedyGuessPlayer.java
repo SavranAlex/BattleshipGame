@@ -28,6 +28,7 @@ public class GreedyGuessPlayer  implements Player{
     Guess lastHit = new Guess();
     Guess previousHit = new Guess();
     boolean targetMode = false;
+    boolean swapped = false;
 
 
     @Override
@@ -111,92 +112,99 @@ public class GreedyGuessPlayer  implements Player{
 
         if(targetMode == true)
         {
-            if(!hits.empty())
-            {
-                lastHit = hits.pop();
-                if(!hits.empty())
-                {
-                    previousHit = hits.pop();
-                    while(!validShot)
-                    {
-                        newGuess = lastHit;
-                        if(previousHit.column > lastHit.column)
-                        {
-                            newGuess.column-=1;
-                        }
-                        else if(previousHit.column < lastHit.column)
-                        {
-                            newGuess.column+=1;
-                        }
-                        else if(previousHit.row > lastHit.row)
-                        {
-                            newGuess.row-=1;
-                        }
-                        else if(previousHit.row < lastHit.row)
-                        {
-                            newGuess.row+=1;
-                        }
+            lastHit = hits.pop();
 
-                        if(isValidShot(newGuess))
-                        {
-                            validShot = true;
-                            return newGuess;
-                        }
-                    }
-                }
-                else
+            //if hits has >1 hits
+            if(!hits.isEmpty())
+            {
+                previousHit = hits.peek();
+                do
                 {
-                    newGuess = lastHit;
-                    //generate random direction, check for valid shot, shoot
-                    while(validShot == false)
+                    if(previousHit.column > lastHit.column) //Last shot was west
                     {
-                        int direction = random.nextInt(4);
-                        
-                        switch(direction)
+                        newGuess.column = lastHit.column-1;
+                        newGuess.row = lastHit.row;
+                    }
+                    else if(previousHit.column < lastHit.column) //Last shot was east
+                    {
+                        newGuess.column = lastHit.column+1;
+                        newGuess.row = lastHit.row;
+                    }
+                    else if(previousHit.row > lastHit.row) //Last shot was north
+                    {
+                        newGuess.row = lastHit.row -1;
+                        newGuess.column = lastHit.column;
+                    }
+                    else if(previousHit.row < lastHit.row)//Last shot was south
+                    {
+                        newGuess.row = lastHit.row +1;
+                        newGuess.column = lastHit.column;
+                    }
+
+                    if(isValidShot(newGuess))
+                    {
+                        return newGuess;
+                    }
+                } while(validShot == false);
+            }
+            else
+            {
+                //generate random direction, check for valid shot, shoot
+                do
+                {
+                    int direction = random.nextInt(4);
+                    
+                    switch(direction)
+                    {
+                        case 0: 
                         {
-                            case 0: 
-                            {
-                                newGuess.column+=1;
-                                break;
-                            }
-                            case 1:
-                            {
-                                newGuess.column-=1;
-                                break;
-                            }
-                            case 2:
-                            {
-                                newGuess.row+=1;
-                                break;
-                            }
-                            case 3:
-                            {
-                                newGuess.row-=1;
-                                break;
-                            }
+                            newGuess.column = lastHit.column + 1;
+                            newGuess.row = lastHit.row;
+                            break;
                         }
-                        if(isValidShot(newGuess)) 
+                        case 1:
                         {
-                            validShot = true;
-                            return newGuess;
+                            newGuess.column = lastHit.column - 1;
+                            newGuess.row = lastHit.row;
+                            break;
+                        }
+                        case 2:
+                        {
+                            newGuess.row = lastHit.row + 1;
+                            newGuess.column = lastHit.column;
+                            break;
+                        }
+                        case 3:
+                        {
+                            newGuess.row = lastHit.row - 1;
+                            newGuess.column = lastHit.column;
+                            break;
                         }
                     }
-                }
+                    if(isValidShot(newGuess)) 
+                    {
+                        return newGuess;
+                    }
+                } while(validShot == false);
             }
+            
         }
         else //Random parityGuesses, hunting mode
         {
             if(parityGuesses.size() != 0)
             {
-                index = random.nextInt(parityGuesses.size());
-                newGuess = parityGuesses.get(index);
-                if(isValidShot(newGuess))
+                do
                 {
-                    parityGuesses.remove(index);
-                    previousGuesses.push(newGuess);
-                }
+                    index = random.nextInt(parityGuesses.size());
+                    newGuess = parityGuesses.get(index);
+                    if(isValidShot(newGuess))
+                    {
+                        parityGuesses.remove(index);
+                        previousGuesses.push(newGuess);
+                        return newGuess;
+                    }
+                } while (validShot == false);
             }
-            return newGuess;
         }
         return null;
     } // end of makeGuess()
@@ -205,9 +213,10 @@ public class GreedyGuessPlayer  implements Player{
     @Override
     public void update(Guess guess, Answer answer) {
 
+        boolean swapped = false;
+
         previousGuesses.push(guess);
 
-        //If ship is hit but not sunk, enter targetting mode
         if(targetMode == true)
         {
             if(answer.isHit == true && answer.shipSunk == null) //Ship hit but not sunk
@@ -219,6 +228,11 @@ public class GreedyGuessPlayer  implements Player{
                 hits.push(guess);
                 targetMode = false;
             }
+            else if(answer.isHit == false)
+            {
+                hits = reverseStack(hits);
+                swapped = true;
+            }
         }
         else
         {
@@ -226,6 +240,9 @@ public class GreedyGuessPlayer  implements Player{
             {
                 hits.push(guess);
                 targetMode = true;
+                swapped = false;
+
+
             }
         }
     } // end of update()
@@ -236,11 +253,26 @@ public class GreedyGuessPlayer  implements Player{
         return remainingShips.isEmpty();
     } // end of noRemainingShips()
 
+    private Stack<Guess> reverseStack(Stack<Guess> stack)
+    {
+        Stack<Guess> temp = new Stack<Guess>();
+
+        while(!stack.isEmpty())
+        {
+            temp.push(stack.pop());
+        }
+        return temp;
+    }
+
     public boolean isValidShot(Guess guess)
     {
         Guess test = new Guess();
         Iterator<Guess> iter = previousGuesses.iterator();
 
+        if(guess.column < 0 || guess.column > world.numColumn || guess.row < 0 || guess.row > world.numRow)
+        {
+            return false;
+        }
         while(iter.hasNext())
         {
             test = iter.next();
