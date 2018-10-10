@@ -122,8 +122,8 @@ public class ProbabilisticGuessPlayer  implements Player{
         }
 
         boolean canPlaceDown, canPlaceAcross;
-        int oldValue;
         Guess tempGuess = new Guess();
+
         //for each remaining guess
         for (Guess guess : remainingGuesses) {
             //for each of the opponent ships
@@ -154,7 +154,7 @@ public class ProbabilisticGuessPlayer  implements Player{
 
                         //For Across Movement
                         tempGuess = guess;
-                        tempGuess.column+=i;    //this specifies that the i movement (length) is across
+                        tempGuess.column+=i;    //this specifies that the i movement (length) is across row
                         tempGuess.row+=j;       //so that the j movement is across columns
 
                         if(!isValidShot(tempGuess) && !isHit(tempGuess))
@@ -176,10 +176,12 @@ public class ProbabilisticGuessPlayer  implements Player{
                             tempGuess.row+=a;
                             //this part doesnt work- null pointer.
                             //not passing through correct reference to the guess in the map?
-                            tempGuess = isSameGuess(tempGuess);
-                            oldValue = densityMap.get(tempGuess);
-                            densityMap.replace(tempGuess, oldValue++);
-
+                            for (Guess entry : densityMap.keySet()) {
+                                if(entry.column == tempGuess.column && entry.row == tempGuess.row)
+                                {
+                                    densityMap.put(entry, densityMap.get(entry)+1);
+                                }
+                            }
                         }
                     }
                 }
@@ -194,9 +196,12 @@ public class ProbabilisticGuessPlayer  implements Player{
                             tempGuess.row+=d;
                             //this part doesnt work- null pointer.
                             //not passing through correct reference to the guess in the map?
-                            tempGuess = isSameGuess(tempGuess);
-                            oldValue = densityMap.get(tempGuess);
-                            densityMap.replace(tempGuess, oldValue++);
+                            for (Guess entry : densityMap.keySet()) {
+                                if(entry.column == tempGuess.column && entry.row == tempGuess.row)
+                                {
+                                    densityMap.put(entry, densityMap.get(entry)+1);
+                                }
+                            }
 
                         }
                     }
@@ -219,17 +224,6 @@ public class ProbabilisticGuessPlayer  implements Player{
         }
 
         return bestGuess;
-    }
-
-    public Guess isSameGuess(Guess guess)
-    {
-        for (Guess entry : densityMap.keySet()) {
-            if(entry.column == guess.column && entry.row == guess.row)
-            {
-                return entry;
-            }
-        }
-        return null;
     }
 
     public boolean isHit(Guess guess)
