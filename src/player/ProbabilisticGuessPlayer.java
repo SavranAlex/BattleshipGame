@@ -27,7 +27,7 @@ public class ProbabilisticGuessPlayer  implements Player{
     ArrayList<Guess> previousGuesses = new ArrayList<>();
     ArrayList<Guess> potentialGuess = new ArrayList<>();
 
-    //Keep a stack of the hits
+    //Keep a list of the hits
     ArrayList<Guess> hits = new ArrayList<>();
     //Keep track of the density map for potential ship locations
     int[][] densityMap;
@@ -114,7 +114,7 @@ public class ProbabilisticGuessPlayer  implements Player{
         previousGuesses.add(guess);
 
         Iterator<Guess> iter = remainingGuesses.iterator();
-        
+
         while(iter.hasNext())
         {
             Guess prev = iter.next();
@@ -136,11 +136,13 @@ public class ProbabilisticGuessPlayer  implements Player{
             while(itera.hasNext())
             {
                 sh = itera.next();
-                if(sh.name() == answer.shipSunk.name())
+                if(Objects.equals(sh.name(), answer.shipSunk.name()))
                 {
                     itera.remove();
                 }
             }
+            //targetMode = false;
+            hits.clear();
         }
 
         if(targetMode)
