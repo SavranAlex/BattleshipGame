@@ -84,8 +84,15 @@ public class ProbabilisticGuessPlayer  implements Player{
 
     @Override
     public Guess makeGuess() {
-        createMap();
-        return bestGuess();
+        Guess guess = new Guess();
+        while(true)
+        {
+            guess = bestGuess();
+            if(isWithinBorders(guess)&& !isGuessed(guess))
+            {
+                return guess;
+            }
+        }
     } // end of makeGuess()
 
 
@@ -129,9 +136,8 @@ public class ProbabilisticGuessPlayer  implements Player{
                     for(int j = 0; j < ship.width(); j++)
                     {
                         //For Down Movement
-                        tempGuess = guess;
-                        tempGuess.column = tempGuess.column + j;    //this specifies that the j movement is across columns (where j is width)
-                        tempGuess.row = tempGuess.row + i;       //so that the i movement (length) is downwards.
+                        tempGuess.column = guess.column + j;    //this specifies that the j movement is across columns (where j is width)
+                        tempGuess.row = guess.row + i;       //so that the i movement (length) is downwards.
                         
                             /*
                             *   If the shot is invalid AND has not been hit,
@@ -145,9 +151,8 @@ public class ProbabilisticGuessPlayer  implements Player{
                         }
 
                         //For Across Movement
-                        tempGuess = guess;
-                        tempGuess.column+=i;    //this specifies that the i movement (length) is across row
-                        tempGuess.row+=j;       //so that the j movement is across columns
+                        tempGuess.column = guess.column + i;    //this specifies that the i movement (length) is across row
+                        tempGuess.row = guess.row + j;       //so that the j movement is across columns
 
                         if(!isWithinBorders(tempGuess))
                         {
@@ -159,60 +164,63 @@ public class ProbabilisticGuessPlayer  implements Player{
 
                 if(canPlaceDown == true)
                 {
-                    tempGuess = guess;
                     for(int a = 0; a < ship.len(); a++)
                     {
                         for(int b = 0; b < ship.width(); b++)
                         {
-                            if(isWithinBorders(tempGuess))
-                            {
-                                densityMap[tempGuess.column+b][tempGuess.row+a]++;
-                            }
+                            densityMap[guess.column+b][guess.row+a]++;
                         }
                     }
                 }
                 if(canPlaceAcross == true)
                 {
-                    tempGuess = guess;
                     for(int c = 0; c < ship.len(); c++)
                     {
                         for(int d = 0; d < ship.width(); d++)
                         {
-                            if(isWithinBorders())
-                            {
-                                densityMap[tempGuess.column+c][tempGuess.row+d]++;
-                            }
+                            densityMap[guess.column+c][guess.row+d]++;
                         }
                     }
                 }
             }
         }
+
+        printMap();
     }
 
     public Guess bestGuess()
     {
-        ArrayList bestGuesses = new ArrayList<>();
-        Guess bestGuess = new Guess();
+        ArrayList<Guess> bestGuesses = new ArrayList<>();
+        Guess guess = new Guess();
+        Random random = new Random();
+        int index;
         int count = 0;
-        for (int i = 0; i < world.numColumn; i++) 
+        createMap();
+
+        for(int i = 0; i < world.numColumn; i++) 
         {
             for(int j = 0; j < world.numRow; j++)
             {
-                bestGuess.row = j;
-                bestGuess.column = i;
+                guess.row = j;
+                guess.column = i;
                 if(densityMap[i][j] > count)
                 {
+                    count = densityMap[i][j];
                     bestGuesses.clear();
-                    bestGuesses.add(bestGuess);
+                    bestGuesses.add(guess);
                 }
                 else if( densityMap[i][j] == count)
                 {
-                    bestGuesses.add(bestGuess);
+                    bestGuesses.add(guess);
                 }
             }
         }
-        System.out.printf("Best Guess: Col: %d\tRow:%d\n", bestGuess.column, bestGuess.row);
-        return bestGuess;
+        
+        index = random.nextInt(bestGuesses.size());
+        guess = bestGuesses.get(index);
+        System.out.printf("Best Guess: Col: %d\tRow:%d\n", guess.column, guess.row);
+
+        return guess;
     }
 
     public boolean isHit(Guess guess)
@@ -224,6 +232,17 @@ public class ProbabilisticGuessPlayer  implements Player{
             }
         }
         return true;
+    }
+    public void printMap()
+    {
+        for(int i = 0; i < world.numColumn; i++)
+        {
+            for(int j = 0; j < world.numRow; j++)
+            {
+                System.out.printf("%d\t", densityMap[i][j]);
+            }
+            System.out.println("\n");
+        }
     }
 
     public boolean isWithinBorders(Guess guess)
