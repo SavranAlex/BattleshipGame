@@ -21,7 +21,7 @@ public class ProbabilisticGuessPlayer  implements Player{
 
     //create guess memory
     ArrayList<Guess> remainingGuesses = new ArrayList<>();
-    Stack<Guess> previousGuesses = new Stack<>();
+    ArrayList<Guess> previousGuesses = new ArrayList<>();
     ArrayList<Guess> potentialGuess = new ArrayList<>();
 
     //Keep a stack of the hits
@@ -96,37 +96,61 @@ public class ProbabilisticGuessPlayer  implements Player{
     public Guess makeGuess() {
         Random random = new Random();
         int index;
-        if(potentialGuess.isEmpty())
-        {
-            return bestGuess();
-        }
-        else
+        if(targetMode)
         {
             index = random.nextInt(potentialGuess.size());
             return potentialGuess.get(index);
+        }
+        else
+        {
+            return bestGuess();
         }
     } // end of makeGuess()
 
 
     @Override
     public void update(Guess guess, Answer answer) {
-        previousGuesses.push(guess);
-        remainingGuesses.remove(guess);
+
+        Iterator<Guess> iter = remainingGuesses.iterator();
         
+        previousGuesses.add(guess);
+
+        while(iter.hasNext())
+        {
+            Guess prev = iter.next();
+            if(prev.column == guess.column && prev.row == guess.row)
+            {
+                iter.remove();
+            }
+        }
+
         if(answer.isHit == true){
             hits.push(guess);
-            targetMode = true;
-            addPotentialGuesses(guess);
+            //targetMode = true;
+        }
+
+        if(answer.shipSunk != null)
+        {
+            for (Ship ship : oppShips) {
+                if(ship.name() == answer.shipSunk.name())
+                {
+                    oppShips.remove(ship); //not going to work, use iterator
+                }
+            }
         }
 
         if(targetMode)
         {
-            //Target mode
+            potentialGuess.clear();
+            addPotentialGuesses(guess);
             if(potentialGuess.isEmpty())
             {
                 targetMode = false;
             }
-
+            else if(answer.isHit == false)
+            {
+                hits = reverseStack(hits);
+            }
         }
 
         
@@ -175,7 +199,7 @@ public class ProbabilisticGuessPlayer  implements Player{
                             *   AND must be used because a hit is still valid but will return false if
                             *   it has been previously guessed and hit.
                             */
-                        if(!isWithinBorders(tempGuess) || (isWithinBorders(tempGuess) && isGuessed(tempGuess) && !isHit(tempGuess))) // If the shot is invalid and the location has not been hit
+                        if(!isWithinBorders(tempGuess) || (isWithinBorders(tempGuess) && isGuessed(tempGuess))) // If the shot is invalid and the location has not been hit
                         {
                             canPlaceDown = false;
                         }
@@ -184,7 +208,7 @@ public class ProbabilisticGuessPlayer  implements Player{
                         tempGuess.column = guess.column + i;    //this specifies that the i movement (length) is across row
                         tempGuess.row = guess.row + j;       //so that the j movement is across columns
 
-                        if(!isWithinBorders(tempGuess) || (isWithinBorders(tempGuess) && isGuessed(tempGuess) && !isHit(tempGuess)))
+                        if(!isWithinBorders(tempGuess) || (isWithinBorders(tempGuess) && isGuessed(tempGuess)))
                         {
                             canPlaceAcross = false;
                         }
@@ -214,11 +238,13 @@ public class ProbabilisticGuessPlayer  implements Player{
                 }
             }
         }
-
-        printMap();
+        System.out.println("Density Map\n");
+        printMap(densityMap);
     }
 
     // Creates a target map of potential surrounding boats and picks the most likely target.
+    //
+    // This should be totally reworked i think..
     public void addPotentialGuesses(Guess guess)
     {
         Guess tempGuess = new Guess();
@@ -240,8 +266,6 @@ public class ProbabilisticGuessPlayer  implements Player{
                 //For each ship
                 for (Ship ship : oppShips) 
                 {
-                    canPlaceAcross = false;
-                    canPlaceDown = false;
                     //If that location in the ship is a valid ship location
                     //AND that ship contains a square that has been hit(guess)
                     //then increment those squares to the targetmap
@@ -249,43 +273,55 @@ public class ProbabilisticGuessPlayer  implements Player{
                     {
                         for(int width = 0; width < ship.width(); width++)
                         {
-                            if(guess.column == i + length && guess.row == j + width)
+                            //This is if the ship placed at [i][j] has a coordinate that occupies the recent hit
+                            if((guess.column == i + length && guess.row == j + width) || (guess.column == j + length && guess.row == i + width))
                             { 
-                                tempGuess.column = i + length;
-                                tempGuess.row = j + width;
-                                //If this ship location is invalid, 
-                                if(isWithinBorders(tempGuess) && (!isGuessed(tempGuess) || (isGuessed(tempGuess) && isHit(tempGuess))))
+                                canPlaceAcross = true;
+                                canPlaceDown = true;
+                                //for every location on that ship, AGAIN
+                                for(int len = 0; len < ship.len(); len++)
                                 {
-                                    canPlaceAcross = true;
+                                    for(int wid = 0; wid < ship.width(); wid++)
+                                    {
+                                        //Below is to check whether the ship can be placed
+                                        tempGuess.column = i + len;
+                                        tempGuess.row = j + wid;
+                                        //If this ship location is valid, 
+                                        //If the guess is within the borders AND has not been guess OR is guessed and has been hit.
+                                        if(!isWithinBorders(tempGuess) || (isWithinBorders(tempGuess) && isGuessed(tempGuess)))
+                                        {
+                                            canPlaceAcross = false;
+                                        }
+
+                                        tempGuess.column = i + wid;
+                                        tempGuess.row = j + len;
+                                        if(!isWithinBorders(tempGuess) || (isWithinBorders(tempGuess) && isGuessed(tempGuess)))
+                                        {
+                                            canPlaceDown = false;
+                                        }
+                                    }
                                 }
 
-                                tempGuess.column = i + width;
-                                tempGuess.row = j + length;
-                                if(isWithinBorders(tempGuess) && (!isGuessed(tempGuess) || (isGuessed(tempGuess) && isHit(tempGuess))))
+                                if(canPlaceAcross)
                                 {
-                                    canPlaceDown = true;
+                                    for(int c = 0; c < ship.len(); c++)
+                                    {
+                                        for(int d = 0; d < ship.width(); d++)
+                                        {
+                                            targetMap[i+c][i+d]++;
+                                        }
+                                    }
                                 }
-                            }
-                        }
-                    }
-
-                    if(canPlaceAcross)
-                    {
-                        for(int c = 0; c < ship.len(); c++)
-                        {
-                            for(int d = 0; d < ship.width(); d++)
-                            {
-                                targetMap[i+c][i+d]++;
-                            }
-                        }
-                    }
-                    if(canPlaceDown)
-                    {
-                        for(int c = 0; c < ship.len(); c++)
-                        {
-                            for(int d = 0; d < ship.width(); d++)
-                            {
-                                targetMap[i+d][i+c]++;
+                                if(canPlaceDown)
+                                {
+                                    for(int c = 0; c < ship.len(); c++)
+                                    {
+                                        for(int d = 0; d < ship.width(); d++)
+                                        {
+                                            targetMap[i+d][i+c]++;
+                                        }
+                                    }
+                                }
                             }
                         }
                     }
@@ -315,6 +351,8 @@ public class ProbabilisticGuessPlayer  implements Player{
                 }
             }
         }
+        System.out.println("TargetMap\n");
+        printMap(targetMap);
     }
 
     public Guess bestGuess()
@@ -364,13 +402,25 @@ public class ProbabilisticGuessPlayer  implements Player{
         }
         return true;
     }
-    public void printMap()
+
+    private Stack<Guess> reverseStack(Stack<Guess> stack)
+    {
+        Stack<Guess> temp = new Stack<Guess>();
+
+        while(!stack.isEmpty())
+        {
+            temp.push(stack.pop());
+        }
+        return temp;
+    }
+
+    public void printMap(int[][] map)
     {
         for(int i = 0; i < world.numColumn; i++)
         {
             for(int j = 0; j < world.numRow; j++)
             {
-                System.out.printf("%d\t", densityMap[i][j]);
+                System.out.printf("%d\t", map[i][j]);
             }
             System.out.println("\n");
         }
