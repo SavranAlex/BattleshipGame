@@ -240,8 +240,8 @@ public class ProbabilisticGuessPlayer  implements Player{
                 //For each ship
                 for (Ship ship : oppShips) 
                 {
-                    canPlaceAcross = true;
-                    canPlaceDown = true;
+                    canPlaceAcross = false;
+                    canPlaceDown = false;
                     //If that location in the ship is a valid ship location
                     //AND that ship contains a square that has been hit(guess)
                     //then increment those squares to the targetmap
@@ -254,16 +254,16 @@ public class ProbabilisticGuessPlayer  implements Player{
                                 tempGuess.column = i + length;
                                 tempGuess.row = j + width;
                                 //If this ship location is invalid, 
-                                if(!isWithinBorders(tempGuess) || (isWithinBorders(tempGuess) && isGuessed(tempGuess) && !isHit(tempGuess)))
+                                if(isWithinBorders(tempGuess) && (!isGuessed(tempGuess) || (isGuessed(tempGuess) && isHit(tempGuess))))
                                 {
-                                    canPlaceAcross = false;
+                                    canPlaceAcross = true;
                                 }
 
                                 tempGuess.column = i + width;
                                 tempGuess.row = j + length;
-                                if(!isWithinBorders(tempGuess) || (isWithinBorders(tempGuess) && isGuessed(tempGuess) && !isHit(tempGuess)))
+                                if(isWithinBorders(tempGuess) && (!isGuessed(tempGuess) || (isGuessed(tempGuess) && isHit(tempGuess))))
                                 {
-                                    canPlaceDown = false;
+                                    canPlaceDown = true;
                                 }
                             }
                         }
