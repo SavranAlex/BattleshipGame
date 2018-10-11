@@ -17,7 +17,7 @@ public class ProbabilisticGuessPlayer  implements Player{
     World world;
     boolean targetMode;
     final int WEIGHT = 3;
-    
+
     //create ship memory
     ArrayList<World.ShipLocation> remainingShips = new ArrayList<>();
     ArrayList<Ship> oppShips = new ArrayList<>();
@@ -153,7 +153,6 @@ public class ProbabilisticGuessPlayer  implements Player{
             }
         }
 
-        
     } // end of update()
 
 
