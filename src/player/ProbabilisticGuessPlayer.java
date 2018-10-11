@@ -57,16 +57,20 @@ public class ProbabilisticGuessPlayer  implements Player{
     @Override
     public Answer getAnswer(Guess guess) {
         Answer answer = new Answer();
+        Coordinate coords;
         //for each ship location, check each coordinate the ship contains
         //to see if it matches the guess.
 
         for(ShipLocation possibleShip : remainingShips)
         {
-            for (Coordinate coords : possibleShip.coordinates) {
+            Iterator<Coordinate> iter = possibleShip.coordinates.iterator();
+            while(iter.hasNext())
+            {
+                coords = iter.next();
                 if(guess.column == coords.column && guess.row == coords.row)
                 {
                     answer.isHit = true; //HIT!
-                    possibleShip.coordinates.remove(coords); // remove the coord from the ship (remaining hits for this particular ship)
+                    iter.remove(); // remove the coord from the ship (remaining hits for this particular ship)
 
                     if(possibleShip.coordinates.isEmpty())
                     {
@@ -98,6 +102,10 @@ public class ProbabilisticGuessPlayer  implements Player{
 
     @Override
     public void update(Guess guess, Answer answer) {
+        if(answer.isHit == true){
+            hits.push(guess);
+            
+        }
         previousGuesses.push(guess);
         remainingGuesses.remove(guess);
     } // end of update()
@@ -145,7 +153,7 @@ public class ProbabilisticGuessPlayer  implements Player{
                             *   AND must be used because a hit is still valid but will return false if
                             *   it has been previously guessed and hit.
                             */
-                        if(!isWithinBorders(tempGuess)) // If the shot is invalid and the location has not been hit
+                        if(!isWithinBorders(tempGuess) || (isWithinBorders(tempGuess) && isGuessed(tempGuess))) // If the shot is invalid and the location has not been hit
                         {
                             canPlaceDown = false;
                         }
@@ -154,7 +162,7 @@ public class ProbabilisticGuessPlayer  implements Player{
                         tempGuess.column = guess.column + i;    //this specifies that the i movement (length) is across row
                         tempGuess.row = guess.row + j;       //so that the j movement is across columns
 
-                        if(!isWithinBorders(tempGuess))
+                        if(!isWithinBorders(tempGuess) || (isWithinBorders(tempGuess) && isGuessed(tempGuess)))
                         {
                             canPlaceAcross = false;
                         }
@@ -201,16 +209,18 @@ public class ProbabilisticGuessPlayer  implements Player{
         {
             for(int j = 0; j < world.numRow; j++)
             {
-                guess.row = j;
-                guess.column = i;
                 if(densityMap[i][j] > count)
                 {
+                    guess.row = j;
+                    guess.column = i;
                     count = densityMap[i][j];
                     bestGuesses.clear();
                     bestGuesses.add(guess);
                 }
                 else if( densityMap[i][j] == count)
                 {
+                    guess.row = j;
+                    guess.column = i;
                     bestGuesses.add(guess);
                 }
             }
@@ -218,7 +228,7 @@ public class ProbabilisticGuessPlayer  implements Player{
         
         index = random.nextInt(bestGuesses.size());
         guess = bestGuesses.get(index);
-        System.out.printf("Best Guess: Col: %d\tRow:%d\n", guess.column, guess.row);
+        System.out.printf("Best Guess: Col: %d\tRow:%d with a count of %d\n The size of array is: %d\n", guess.column, guess.row, count, bestGuesses.size());
 
         return guess;
     }
