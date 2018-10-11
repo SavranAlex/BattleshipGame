@@ -14,7 +14,7 @@ import java.util.*;
 public class ProbabilisticGuessPlayer  implements Player{
     //create world
     World world;
-
+    boolean targetMode;
     //create ship memory
     ArrayList<World.ShipLocation> remainingShips = new ArrayList<>();
     ArrayList<Ship> oppShips = new ArrayList<>();
@@ -22,16 +22,21 @@ public class ProbabilisticGuessPlayer  implements Player{
     //create guess memory
     ArrayList<Guess> remainingGuesses = new ArrayList<>();
     Stack<Guess> previousGuesses = new Stack<>();
+    ArrayList<Guess> potentialGuess = new ArrayList<>();
 
     //Keep a stack of the hits
     Stack<Guess> hits = new Stack<>();
     //Keep track of the density map for potential ship locations
     int[][] densityMap;
+    int[][] targetMap;
 
     @Override
     public void initialisePlayer(World world) {
         this.world = world;
+        targetMode = false;
         densityMap = new int[world.numColumn][world.numRow];
+        targetMap = new int[world.numColumn][world.numRow];
+
         //insert ships into the local ship locations
         //Keep track of opponent ships still in play
         for (ShipLocation sLoc : world.shipLocations) {
@@ -48,6 +53,7 @@ public class ProbabilisticGuessPlayer  implements Player{
                 addGuess.row = row;
                 addGuess.column = column;
                 densityMap[column][row] = 0;
+                targetMap[column][row] = 0;
                 remainingGuesses.add(addGuess);
             }
         }
@@ -88,26 +94,42 @@ public class ProbabilisticGuessPlayer  implements Player{
 
     @Override
     public Guess makeGuess() {
-        Guess guess = new Guess();
-        while(true)
+        Random random = new Random();
+        int index;
+        if(potentialGuess.isEmpty())
         {
-            guess = bestGuess();
-            if(isWithinBorders(guess)&& !isGuessed(guess))
-            {
-                return guess;
-            }
+            return bestGuess();
+        }
+        else
+        {
+            index = random.nextInt(potentialGuess.size());
+            return potentialGuess.get(index);
         }
     } // end of makeGuess()
 
 
     @Override
     public void update(Guess guess, Answer answer) {
-        if(answer.isHit == true){
-            hits.push(guess);
-            
-        }
         previousGuesses.push(guess);
         remainingGuesses.remove(guess);
+        
+        if(answer.isHit == true){
+            hits.push(guess);
+            targetMode = true;
+            addPotentialGuesses(guess);
+        }
+
+        if(targetMode)
+        {
+            //Target mode
+            if(potentialGuess.isEmpty())
+            {
+                targetMode = false;
+            }
+
+        }
+
+        
     } // end of update()
 
 
@@ -153,7 +175,7 @@ public class ProbabilisticGuessPlayer  implements Player{
                             *   AND must be used because a hit is still valid but will return false if
                             *   it has been previously guessed and hit.
                             */
-                        if(!isWithinBorders(tempGuess) || (isWithinBorders(tempGuess) && isGuessed(tempGuess))) // If the shot is invalid and the location has not been hit
+                        if(!isWithinBorders(tempGuess) || (isWithinBorders(tempGuess) && isGuessed(tempGuess) && !isHit(tempGuess))) // If the shot is invalid and the location has not been hit
                         {
                             canPlaceDown = false;
                         }
@@ -162,7 +184,7 @@ public class ProbabilisticGuessPlayer  implements Player{
                         tempGuess.column = guess.column + i;    //this specifies that the i movement (length) is across row
                         tempGuess.row = guess.row + j;       //so that the j movement is across columns
 
-                        if(!isWithinBorders(tempGuess) || (isWithinBorders(tempGuess) && isGuessed(tempGuess)))
+                        if(!isWithinBorders(tempGuess) || (isWithinBorders(tempGuess) && isGuessed(tempGuess) && !isHit(tempGuess)))
                         {
                             canPlaceAcross = false;
                         }
@@ -194,6 +216,105 @@ public class ProbabilisticGuessPlayer  implements Player{
         }
 
         printMap();
+    }
+
+    // Creates a target map of potential surrounding boats and picks the most likely target.
+    public void addPotentialGuesses(Guess guess)
+    {
+        Guess tempGuess = new Guess();
+        boolean canPlaceAcross, canPlaceDown;
+        //reset the target map
+        for(int column = 0; column < world.numColumn; column++)
+        {
+            for(int row = 0; row < world.numRow; row++)
+            {
+                targetMap[column][row] = 0;
+            }
+        }
+
+        //For every location
+        for(int i = 0; i < world.numColumn; i++)
+        {
+            for(int j = 0; j < world.numRow; j++)
+            {
+                //For each ship
+                for (Ship ship : oppShips) 
+                {
+                    canPlaceAcross = true;
+                    canPlaceDown = true;
+                    //If that location in the ship is a valid ship location
+                    //AND that ship contains a square that has been hit(guess)
+                    //then increment those squares to the targetmap
+                    for(int length = 0; length < ship.len(); length++)
+                    {
+                        for(int width = 0; width < ship.width(); width++)
+                        {
+                            if(guess.column == i + length && guess.row == j + width)
+                            { 
+                                tempGuess.column = i + length;
+                                tempGuess.row = j + width;
+                                //If this ship location is invalid, 
+                                if(!isWithinBorders(tempGuess) || (isWithinBorders(tempGuess) && isGuessed(tempGuess) && !isHit(tempGuess)))
+                                {
+                                    canPlaceAcross = false;
+                                }
+
+                                tempGuess.column = i + width;
+                                tempGuess.row = j + length;
+                                if(!isWithinBorders(tempGuess) || (isWithinBorders(tempGuess) && isGuessed(tempGuess) && !isHit(tempGuess)))
+                                {
+                                    canPlaceDown = false;
+                                }
+                            }
+                        }
+                    }
+
+                    if(canPlaceAcross)
+                    {
+                        for(int c = 0; c < ship.len(); c++)
+                        {
+                            for(int d = 0; d < ship.width(); d++)
+                            {
+                                targetMap[i+c][i+d]++;
+                            }
+                        }
+                    }
+                    if(canPlaceDown)
+                    {
+                        for(int c = 0; c < ship.len(); c++)
+                        {
+                            for(int d = 0; d < ship.width(); d++)
+                            {
+                                targetMap[i+d][i+c]++;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        //edit
+        int count = 0;
+        for(int i = 0; i < world.numColumn; i++) 
+        {
+            for(int j = 0; j < world.numRow; j++)
+            {
+                if(targetMap[i][j] > count)
+                {
+                    tempGuess.row = j;
+                    tempGuess.column = i;
+                    count = densityMap[i][j];
+                    potentialGuess.clear();
+                    potentialGuess.add(tempGuess);
+                }
+                else if( targetMap[i][j] == count)
+                {
+                    tempGuess.row = j;
+                    tempGuess.column = i;
+                    potentialGuess.add(tempGuess);
+                }
+            }
+        }
     }
 
     public Guess bestGuess()
