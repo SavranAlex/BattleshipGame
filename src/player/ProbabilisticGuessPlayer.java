@@ -26,19 +26,16 @@ public class ProbabilisticGuessPlayer  implements Player{
     //Keep a stack of the hits
     Stack<Guess> hits = new Stack<>();
     //Keep track of the density map for potential ship locations
-    Map<Guess,Integer> densityMap = new HashMap<>();
+    int[][] densityMap;
 
     @Override
-    public void initialisePlayer(World wrld) {
-        this.world = wrld;
+    public void initialisePlayer(World world) {
+        this.world = world;
+        densityMap = new int[world.numColumn][world.numRow];
         //insert ships into the local ship locations
-        for(int i = 0; i < world.shipLocations.size(); i++)
-        {
-            remainingShips.add(world.shipLocations.get(i));
-        }
-
         //Keep track of opponent ships still in play
         for (ShipLocation sLoc : world.shipLocations) {
+            remainingShips.add(sLoc);
             oppShips.add(sLoc.ship);
         }
 
@@ -50,8 +47,8 @@ public class ProbabilisticGuessPlayer  implements Player{
                 Guess addGuess = new Guess();
                 addGuess.row = row;
                 addGuess.column = column;
+                densityMap[column][row] = 0;
                 remainingGuesses.add(addGuess);
-                densityMap.put(addGuess, 0);
             }
         }
 
@@ -87,16 +84,15 @@ public class ProbabilisticGuessPlayer  implements Player{
 
     @Override
     public Guess makeGuess() {
-        Guess best = new Guess();
         createMap();
-        best = bestGuess();
-        return best;
+        return bestGuess();
     } // end of makeGuess()
 
 
     @Override
     public void update(Guess guess, Answer answer) {
-        // To be implemented.
+        previousGuesses.push(guess);
+        remainingGuesses.remove(guess);
     } // end of update()
 
 
@@ -109,15 +105,11 @@ public class ProbabilisticGuessPlayer  implements Player{
     public void createMap()
     {
         //reset the map
-        densityMap.clear();
         for(int column = 0; column < world.numColumn; column++)
         {
             for(int row = 0; row < world.numRow; row++)
             {
-                Guess newGuess = new Guess();
-                newGuess.column = column;
-                newGuess.row = row;
-                densityMap.put(newGuess, 0);
+                densityMap[column][row] = 0;
             }
         }
 
@@ -138,8 +130,8 @@ public class ProbabilisticGuessPlayer  implements Player{
                     {
                         //For Down Movement
                         tempGuess = guess;
-                        tempGuess.column+=j;    //this specifies that the j movement is across columns (where j is width)
-                        tempGuess.row+=i;       //so that the i movement (length) is downwards.
+                        tempGuess.column = tempGuess.column + j;    //this specifies that the j movement is across columns (where j is width)
+                        tempGuess.row = tempGuess.row + i;       //so that the i movement (length) is downwards.
                         
                             /*
                             *   If the shot is invalid AND has not been hit,
@@ -147,7 +139,7 @@ public class ProbabilisticGuessPlayer  implements Player{
                             *   AND must be used because a hit is still valid but will return false if
                             *   it has been previously guessed and hit.
                             */
-                        if(!isValidShot(tempGuess) && !isHit(tempGuess)) // If the shot is invalid and the location has not been hit
+                        if(!isWithinBorders(tempGuess)) // If the shot is invalid and the location has not been hit
                         {
                             canPlaceDown = false;
                         }
@@ -157,7 +149,7 @@ public class ProbabilisticGuessPlayer  implements Player{
                         tempGuess.column+=i;    //this specifies that the i movement (length) is across row
                         tempGuess.row+=j;       //so that the j movement is across columns
 
-                        if(!isValidShot(tempGuess) && !isHit(tempGuess))
+                        if(!isWithinBorders(tempGuess))
                         {
                             canPlaceAcross = false;
                         }
@@ -165,44 +157,31 @@ public class ProbabilisticGuessPlayer  implements Player{
                 }
                 //If it gets to here and canPlace is still true, increase counters
 
-                if(canPlaceDown)
+                if(canPlaceDown == true)
                 {
+                    tempGuess = guess;
                     for(int a = 0; a < ship.len(); a++)
                     {
                         for(int b = 0; b < ship.width(); b++)
                         {
-                            tempGuess = guess;
-                            tempGuess.column+=b;
-                            tempGuess.row+=a;
-                            //this part doesnt work- null pointer.
-                            //not passing through correct reference to the guess in the map?
-                            for (Guess entry : densityMap.keySet()) {
-                                if(entry.column == tempGuess.column && entry.row == tempGuess.row)
-                                {
-                                    densityMap.put(entry, densityMap.get(entry)+1);
-                                }
+                            if(isWithinBorders(tempGuess))
+                            {
+                                densityMap[tempGuess.column+b][tempGuess.row+a]++;
                             }
                         }
                     }
                 }
-                if(canPlaceAcross)
+                if(canPlaceAcross == true)
                 {
+                    tempGuess = guess;
                     for(int c = 0; c < ship.len(); c++)
                     {
                         for(int d = 0; d < ship.width(); d++)
                         {
-                            tempGuess = guess;
-                            tempGuess.column+=c;
-                            tempGuess.row+=d;
-                            //this part doesnt work- null pointer.
-                            //not passing through correct reference to the guess in the map?
-                            for (Guess entry : densityMap.keySet()) {
-                                if(entry.column == tempGuess.column && entry.row == tempGuess.row)
-                                {
-                                    densityMap.put(entry, densityMap.get(entry)+1);
-                                }
+                            if(isWithinBorders())
+                            {
+                                densityMap[tempGuess.column+c][tempGuess.row+d]++;
                             }
-
                         }
                     }
                 }
@@ -212,17 +191,27 @@ public class ProbabilisticGuessPlayer  implements Player{
 
     public Guess bestGuess()
     {
+        ArrayList bestGuesses = new ArrayList<>();
         Guess bestGuess = new Guess();
         int count = 0;
-
-        for (Map.Entry<Guess, Integer> entry : densityMap.entrySet()) {
-            if(entry.getValue() > count)
+        for (int i = 0; i < world.numColumn; i++) 
+        {
+            for(int j = 0; j < world.numRow; j++)
             {
-                count = entry.getValue();
-                bestGuess = entry.getKey();
+                bestGuess.row = j;
+                bestGuess.column = i;
+                if(densityMap[i][j] > count)
+                {
+                    bestGuesses.clear();
+                    bestGuesses.add(bestGuess);
+                }
+                else if( densityMap[i][j] == count)
+                {
+                    bestGuesses.add(bestGuess);
+                }
             }
         }
-
+        System.out.printf("Best Guess: Col: %d\tRow:%d\n", bestGuess.column, bestGuess.row);
         return bestGuess;
     }
 
@@ -237,21 +226,25 @@ public class ProbabilisticGuessPlayer  implements Player{
         return true;
     }
 
-    public boolean isValidShot(Guess guess)
+    public boolean isWithinBorders(Guess guess)
     {
         if(guess.column < 0 || guess.column >= world.numColumn || guess.row < 0 || guess.row >= world.numRow)
         {
             return false;
         }
+        return true;
+    }
 
+    public boolean isGuessed(Guess guess)
+    {
         for (Guess prevGuess : previousGuesses) 
         {
             if(prevGuess.column == guess.column && prevGuess.row == guess.row)
             {
-                return false;
+                return true;
             }
         }
 
-        return true;
+        return false;
     }
 } // end of class ProbabilisticGuessPlayer
