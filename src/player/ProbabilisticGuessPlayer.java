@@ -16,7 +16,9 @@ public class ProbabilisticGuessPlayer  implements Player{
     //create world
     World world;
     boolean targetMode;
-    final int WEIGHT = 100;
+    final int WEIGHT = 6;
+    ArrayList <Guess> correctGueesesInArow = new ArrayList<>();
+    boolean twoCorrectGuessesInArow = false;
 
     //create ship memory
     ArrayList<World.ShipLocation> remainingShips = new ArrayList<>();
@@ -111,6 +113,20 @@ public class ProbabilisticGuessPlayer  implements Player{
     @Override
     public void update(Guess guess, Answer answer) {
 
+        if (answer.isHit) {
+            correctGueesesInArow.add(guess);
+        } else {
+            correctGueesesInArow.clear();
+        }
+
+        if (correctGueesesInArow.size() > 1) {
+            twoCorrectGuessesInArow = true;
+        }
+        if (!answer.isHit) {
+            correctGueesesInArow.clear();
+            twoCorrectGuessesInArow = false;
+        }
+
         previousGuesses.add(guess);
 
         Iterator<Guess> iter = remainingGuesses.iterator();
@@ -146,6 +162,8 @@ public class ProbabilisticGuessPlayer  implements Player{
             {
                 hits.clear();
             }
+            correctGueesesInArow.clear();
+            twoCorrectGuessesInArow = false;
         }
 
         if(targetMode)
@@ -318,6 +336,13 @@ public class ProbabilisticGuessPlayer  implements Player{
                             if(!isHit(tempGuess))
                             {
                                 targetMap[tempGuess.column][tempGuess.row]++;
+                                if (twoCorrectGuessesInArow) {
+                                    if (correctGueesesInArow.get(correctGueesesInArow.size()-2).column == correctGueesesInArow.get(correctGueesesInArow.size()-1).column
+                                            //|| correctGueesesInArow.get(correctGueesesInArow.size()-2).row == correctGueesesInArow.get(correctGueesesInArow.size()-1).row
+                                    ) {
+                                        targetMap[tempGuess.column][tempGuess.row]*=WEIGHT*100;
+                                    }
+                                }
                             }
                         }
                     }
@@ -333,6 +358,13 @@ public class ProbabilisticGuessPlayer  implements Player{
                             if(!isHit(tempGuess))
                             {
                                 targetMap[tempGuess.column][tempGuess.row]++;
+                                if (twoCorrectGuessesInArow) {
+                                    if (
+                                            //correctGueesesInArow.get(correctGueesesInArow.size()-2).column == correctGueesesInArow.get(correctGueesesInArow.size()-1).column ||
+                                            correctGueesesInArow.get(correctGueesesInArow.size()-2).row == correctGueesesInArow.get(correctGueesesInArow.size()-1).row) {
+                                        targetMap[tempGuess.column][tempGuess.row]*=WEIGHT*100;
+                                    }
+                                }
                             }
                         }
                     }
@@ -347,6 +379,14 @@ public class ProbabilisticGuessPlayer  implements Player{
                             if(!isHit(tempGuess))
                             {
                                 targetMap[tempGuess.column][tempGuess.row]++;
+                                if (twoCorrectGuessesInArow) {
+                                    if (
+                                            correctGueesesInArow.get(correctGueesesInArow.size()-2).column == correctGueesesInArow.get(correctGueesesInArow.size()-1).column
+                                            //|| correctGueesesInArow.get(correctGueesesInArow.size()-2).row == correctGueesesInArow.get(correctGueesesInArow.size()-1).row
+                                    ) {
+                                        targetMap[tempGuess.column][tempGuess.row]*=WEIGHT*100;
+                                    }
+                                }
                             }
                         }
                     }
@@ -361,6 +401,13 @@ public class ProbabilisticGuessPlayer  implements Player{
                             if(!isHit(tempGuess))
                             {
                                 targetMap[tempGuess.column][tempGuess.row]++;
+                                if (twoCorrectGuessesInArow) {
+                                    if (
+                                            //correctGueesesInArow.get(correctGueesesInArow.size()-2).column == correctGueesesInArow.get(correctGueesesInArow.size()-1).column ||
+                                            correctGueesesInArow.get(correctGueesesInArow.size()-2).row == correctGueesesInArow.get(correctGueesesInArow.size()-1).row) {
+                                        targetMap[tempGuess.column][tempGuess.row]*=WEIGHT*100;
+                                    }
+                                }
                             }
                         }
                     }
