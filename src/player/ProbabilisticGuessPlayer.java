@@ -142,7 +142,7 @@ public class ProbabilisticGuessPlayer  implements Player{
                 }
             }
             
-            //targetMode = false;
+            targetMode = false;
             hits.clear();
         }
 
@@ -335,34 +335,34 @@ public class ProbabilisticGuessPlayer  implements Player{
                         }
                     }
                 }
-                if (canPlaceUp) {
-                    for(int a = 0; a < ship.len(); a++)
-                    {
-                        for(int b = 0; b < ship.width(); b++)
-                        {
-                            tempGuess.column = guess.column-b;
-                            tempGuess.row = guess.row - a;
-                            if(!isHit(tempGuess))
-                            {
-                                targetMap[tempGuess.column][tempGuess.row]++;
-                            }
-                        }
-                    }
-                }
-                if (canPlaceLeft) {
-                    for(int c = 0; c < ship.len(); c++)
-                    {
-                        for(int d = 0; d < ship.width(); d++)
-                        {
-                            tempGuess.column = guess.column-c;
-                            tempGuess.row = guess.row - d;
-                            if(!isHit(tempGuess))
-                            {
-                                targetMap[tempGuess.column][tempGuess.row]++;
-                            }
-                        }
-                    }
-                }
+                // if (canPlaceUp) {
+                //     for(int a = 0; a < ship.len(); a++)
+                //     {
+                //         for(int b = 0; b < ship.width(); b++)
+                //         {
+                //             tempGuess.column = guess.column-b;
+                //             tempGuess.row = guess.row - a;
+                //             if(!isHit(tempGuess))
+                //             {
+                //                 targetMap[tempGuess.column][tempGuess.row]++;
+                //             }
+                //         }
+                //     }
+                // }
+                // if (canPlaceLeft) {
+                //     for(int c = 0; c < ship.len(); c++)
+                //     {
+                //         for(int d = 0; d < ship.width(); d++)
+                //         {
+                //             tempGuess.column = guess.column-c;
+                //             tempGuess.row = guess.row - d;
+                //             if(!isHit(tempGuess))
+                //             {
+                //                 targetMap[tempGuess.column][tempGuess.row]++;
+                //             }
+                //         }
+                //     }
+                // }
             }
         }
 
@@ -462,7 +462,7 @@ public class ProbabilisticGuessPlayer  implements Player{
         Guess guess = new Guess();
         Random random = new Random();
         int index;
-        int count = 0;
+        int count = 1;
         createTargetMap();
         addPotentialGuesses();
 
@@ -486,11 +486,14 @@ public class ProbabilisticGuessPlayer  implements Player{
                 }
             }
         }
-        
+
+        if(bestGuesses.size() == 0) return bestGuess();
+
         index = random.nextInt(bestGuesses.size());
         guess = bestGuesses.get(index);
         System.out.printf("Best Guess: Col: %d\tRow:%d with a count of %d\n The size of array is: %d\n", guess.column, guess.row, count, bestGuesses.size());
 
+        
         return guess;
     }
 
