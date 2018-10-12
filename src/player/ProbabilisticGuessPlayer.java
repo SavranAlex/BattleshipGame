@@ -252,7 +252,7 @@ public class ProbabilisticGuessPlayer  implements Player{
         }
 
         //
-        boolean canPlaceDown, canPlaceAcross;
+        boolean canPlaceDown, canPlaceAcross, canPlaceUp, canPlaceLeft;
         Guess tempGuess = new Guess();
 
         for (Guess guess : remainingGuesses) {
@@ -261,6 +261,8 @@ public class ProbabilisticGuessPlayer  implements Player{
             {
                 canPlaceAcross = true;
                 canPlaceDown = true;
+                canPlaceUp = true;
+                canPlaceLeft = true;
 
                 for(int i = 0; i < ship.len(); i++)
                 {
@@ -283,6 +285,22 @@ public class ProbabilisticGuessPlayer  implements Player{
                         {
                             canPlaceAcross = false;
                         }
+
+                        //Up
+                        tempGuess.column = guess.column - j;
+                        tempGuess.row = guess.row - i;
+
+                        if (!isWithinBorders(tempGuess) || (isGuessed(tempGuess) && !isHit(tempGuess))) {
+                            canPlaceUp = false;
+                        }
+
+                        //Left
+                        tempGuess.column = guess.column - i;
+                        tempGuess.row = guess.row - j;
+
+                        if (!isWithinBorders(tempGuess) || (isGuessed(tempGuess) && !isHit(tempGuess))) {
+                            canPlaceLeft = false;
+                        }
                     }
                 }
 
@@ -303,6 +321,24 @@ public class ProbabilisticGuessPlayer  implements Player{
                         for(int d = 0; d < ship.width(); d++)
                         {
                             targetMap[guess.column+c][guess.row+d]++;
+                        }
+                    }
+                }
+                if (canPlaceUp) {
+                    for(int a = 0; a < ship.len(); a++)
+                    {
+                        for(int b = 0; b < ship.width(); b++)
+                        {
+                            targetMap[guess.column-b][guess.row-a]++;
+                        }
+                    }
+                }
+                if (canPlaceLeft) {
+                    for(int c = 0; c < ship.len(); c++)
+                    {
+                        for(int d = 0; d < ship.width(); d++)
+                        {
+                            targetMap[guess.column-c][guess.row-d]++;
                         }
                     }
                 }
