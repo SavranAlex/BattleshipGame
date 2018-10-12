@@ -142,7 +142,6 @@ public class ProbabilisticGuessPlayer  implements Player{
                 }
             }
             
-            //targetMode = false;
             if(hits.size() == answer.shipSunk.len()*answer.shipSunk.width())
             {
                 hits.clear();
