@@ -141,6 +141,7 @@ public class ProbabilisticGuessPlayer  implements Player{
                     itera.remove();
                 }
             }
+            
             //targetMode = false;
             hits.clear();
         }
@@ -310,7 +311,12 @@ public class ProbabilisticGuessPlayer  implements Player{
                     {
                         for(int b = 0; b < ship.width(); b++)
                         {
-                            targetMap[guess.column+b][guess.row+a]++;
+                            tempGuess.column = guess.column+b;
+                            tempGuess.row = guess.row+a;
+                            if(!isHit(tempGuess))
+                            {
+                                targetMap[tempGuess.column][tempGuess.row]++;
+                            }
                         }
                     }
                 }
@@ -320,7 +326,12 @@ public class ProbabilisticGuessPlayer  implements Player{
                     {
                         for(int d = 0; d < ship.width(); d++)
                         {
-                            targetMap[guess.column+c][guess.row+d]++;
+                            tempGuess.column = guess.column+c;
+                            tempGuess.row = guess.row+d;
+                            if(!isHit(tempGuess))
+                            {
+                                targetMap[tempGuess.column][tempGuess.row]++;
+                            }
                         }
                     }
                 }
@@ -329,7 +340,12 @@ public class ProbabilisticGuessPlayer  implements Player{
                     {
                         for(int b = 0; b < ship.width(); b++)
                         {
-                            targetMap[guess.column-b][guess.row-a]++;
+                            tempGuess.column = guess.column-b;
+                            tempGuess.row = guess.row - a;
+                            if(!isHit(tempGuess))
+                            {
+                                targetMap[tempGuess.column][tempGuess.row]++;
+                            }
                         }
                     }
                 }
@@ -338,7 +354,12 @@ public class ProbabilisticGuessPlayer  implements Player{
                     {
                         for(int d = 0; d < ship.width(); d++)
                         {
-                            targetMap[guess.column-c][guess.row-d]++;
+                            tempGuess.column = guess.column-c;
+                            tempGuess.row = guess.row - d;
+                            if(!isHit(tempGuess))
+                            {
+                                targetMap[tempGuess.column][tempGuess.row]++;
+                            }
                         }
                     }
                 }
