@@ -17,7 +17,9 @@ public class ProbabilisticGuessPlayer  implements Player{
     World world;
     boolean targetMode;
     final int WEIGHT = 6;
+    //list to store guesses if 2 of them were correct in a row
     ArrayList <Guess> correctGueesesInArow = new ArrayList<>();
+    //true if correctGueesesInArow has > 1 guesses
     boolean twoCorrectGuessesInArow = false;
 
     //create ship memory
@@ -120,7 +122,7 @@ public class ProbabilisticGuessPlayer  implements Player{
         }
 
         if (correctGueesesInArow.size() > 1) {
-            twoCorrectGuessesInArow = true;
+            twoCorrectGuessesInArow = true;//two correct hits in a row
         }
         if (!answer.isHit) {
             correctGueesesInArow.clear();
@@ -158,12 +160,12 @@ public class ProbabilisticGuessPlayer  implements Player{
                 }
             }
             
-            if(hits.size() == answer.shipSunk.len()*answer.shipSunk.width())
+            if(hits.size() == answer.shipSunk.len()*answer.shipSunk.width()) //handle the situation with ships which stuck together
             {
                 hits.clear();
             }
             correctGueesesInArow.clear();
-            twoCorrectGuessesInArow = false;
+            twoCorrectGuessesInArow = false; //ship sunk, no need to keep track until next hit
         }
 
         if(targetMode)
@@ -257,8 +259,6 @@ public class ProbabilisticGuessPlayer  implements Player{
                 }
             }
         }
-        System.out.println("Density Map\n");
-        printMap(densityMap);
     }
 
     public void createTargetMap()
@@ -337,9 +337,7 @@ public class ProbabilisticGuessPlayer  implements Player{
                             {
                                 targetMap[tempGuess.column][tempGuess.row]++;
                                 if (twoCorrectGuessesInArow) {
-                                    if (correctGueesesInArow.get(correctGueesesInArow.size()-2).column == correctGueesesInArow.get(correctGueesesInArow.size()-1).column
-                                            //|| correctGueesesInArow.get(correctGueesesInArow.size()-2).row == correctGueesesInArow.get(correctGueesesInArow.size()-1).row
-                                    ) {
+                                    if (correctGueesesInArow.get(correctGueesesInArow.size()-2).column == correctGueesesInArow.get(correctGueesesInArow.size()-1).column) {
                                         targetMap[tempGuess.column][tempGuess.row]*=WEIGHT*100;
                                     }
                                 }
@@ -359,9 +357,7 @@ public class ProbabilisticGuessPlayer  implements Player{
                             {
                                 targetMap[tempGuess.column][tempGuess.row]++;
                                 if (twoCorrectGuessesInArow) {
-                                    if (
-                                            //correctGueesesInArow.get(correctGueesesInArow.size()-2).column == correctGueesesInArow.get(correctGueesesInArow.size()-1).column ||
-                                            correctGueesesInArow.get(correctGueesesInArow.size()-2).row == correctGueesesInArow.get(correctGueesesInArow.size()-1).row) {
+                                    if (correctGueesesInArow.get(correctGueesesInArow.size()-2).row == correctGueesesInArow.get(correctGueesesInArow.size()-1).row) {
                                         targetMap[tempGuess.column][tempGuess.row]*=WEIGHT*100;
                                     }
                                 }
@@ -380,10 +376,7 @@ public class ProbabilisticGuessPlayer  implements Player{
                             {
                                 targetMap[tempGuess.column][tempGuess.row]++;
                                 if (twoCorrectGuessesInArow) {
-                                    if (
-                                            correctGueesesInArow.get(correctGueesesInArow.size()-2).column == correctGueesesInArow.get(correctGueesesInArow.size()-1).column
-                                            //|| correctGueesesInArow.get(correctGueesesInArow.size()-2).row == correctGueesesInArow.get(correctGueesesInArow.size()-1).row
-                                    ) {
+                                    if (correctGueesesInArow.get(correctGueesesInArow.size()-2).column == correctGueesesInArow.get(correctGueesesInArow.size()-1).column) {
                                         targetMap[tempGuess.column][tempGuess.row]*=WEIGHT*100;
                                     }
                                 }
@@ -402,9 +395,7 @@ public class ProbabilisticGuessPlayer  implements Player{
                             {
                                 targetMap[tempGuess.column][tempGuess.row]++;
                                 if (twoCorrectGuessesInArow) {
-                                    if (
-                                            //correctGueesesInArow.get(correctGueesesInArow.size()-2).column == correctGueesesInArow.get(correctGueesesInArow.size()-1).column ||
-                                            correctGueesesInArow.get(correctGueesesInArow.size()-2).row == correctGueesesInArow.get(correctGueesesInArow.size()-1).row) {
+                                    if (correctGueesesInArow.get(correctGueesesInArow.size()-2).row == correctGueesesInArow.get(correctGueesesInArow.size()-1).row) {
                                         targetMap[tempGuess.column][tempGuess.row]*=WEIGHT*100;
                                     }
                                 }
@@ -414,9 +405,6 @@ public class ProbabilisticGuessPlayer  implements Player{
                 }
             }
         }
-
-        System.out.println("TargetMap\n");
-        printMap(targetMap);
     }
 
     public void addPotentialGuesses()
@@ -496,8 +484,6 @@ public class ProbabilisticGuessPlayer  implements Player{
             }
             index = random.nextInt(bestGuesses.size());
             guess = bestGuesses.get(index);
-            System.out.printf("Best Guess: Col: %d\tRow:%d with a count of %d\n The size of array is: %d\n", guess.column, guess.row, count, bestGuesses.size());
-            
             if(!isGuessed(guess))
             {
                 return guess;
@@ -542,9 +528,7 @@ public class ProbabilisticGuessPlayer  implements Player{
         }
         index = random.nextInt(bestGuesses.size());
         guess = bestGuesses.get(index);
-        System.out.printf("Best Guess: Col: %d\tRow:%d with a count of %d\n The size of array is: %d\n", guess.column, guess.row, count, bestGuesses.size());
 
-        
         return guess;
     }
 
@@ -559,7 +543,7 @@ public class ProbabilisticGuessPlayer  implements Player{
         return false;
     }
 
-    public void printMap(int[][] map)
+    public void printMap(int[][] map) // was used for testing purpose, not used for the final solution
     {
         for(int i = 0; i < world.numColumn; i++)
         {
